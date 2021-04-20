@@ -1,23 +1,54 @@
+import sys
 from os import path
+
 from PIL import ImageGrab
 from PIL import Image
+
 import tkinter
 from tkinter import messagebox
 from tkinter import filedialog
+
 import cv2
 import numpy
+
 import datetime
+
+import json
+
+config_exists = False
+if path.isfile(path.abspath(__file__ +"/.." "/ScrUtl_config.py")):
+    import ScrUtl_config
+    config_exists = True
 
 ##### 関数定義 #####
 # サムネイルを表示（書き換え予定）
-def showImage(x: int, screenshot: Image.Image):
-    image = numpy.asarray(screenshot)
+def show_image(x: int, input_image: Image.Image):
+    image = numpy.asarray(input_image)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    y = int(x * (screenshot.size[1] / screenshot.size[0]))
+
+    y = int(x * (input_image.size[1] / input_image.size[0]))
     image = cv2.resize(image, dsize=(x, y))
 
     cv2.imshow("thumbnail", image)
+
+# スクショを取得（書き換え予定）
+def screenshot():
+    image = ImageGrab.grabclipboard()
+    if isinstance(image, Image.Image) != True:
+        image = ImageGrab.grab()
+
+    return image
+
+# フォルダ選択
+def select_dir():
+    config_data = open(__file__+"/../ScrUtl.config.json", encoding="utf-8")
+    ini_dir = json.load(config_data)["ini_dir"]
+
+    if path.isdir(ini_dir):
+        directory = filedialog.askdirectory(initialdir=ini_dir)
+    else:
+        directory = filedialog.askdirectory()
+    return directory
 
 # 保存先のパスを生成
 def naming(filepath: str):
@@ -32,24 +63,29 @@ def naming(filepath: str):
     return result
 
 ##### 本文 #####
-# スクショを取得（書き換え予定）
-screenshot = ImageGrab.grabclipboard()
-if isinstance(screenshot, Image.Image) != True:
-    screenshot = ImageGrab.grab()
 
-# tkinterの背景を削除
+# コマンドライン引数処理
+if config_exists == True and len(sys.argv) > 1 and (sys.argv[1] == "-c"or sys.argv[1] == "--config"):
+    ScrUtl_config.set_ini_dir()
+    sys.exit()
+
+# 前処理、tkinterの背景を削除
 root = tkinter.Tk()
 root.withdraw()
 
+# スクショを取得
+image = screenshot()
+
 # 取得した内容が画像であるか？
-if isinstance(screenshot, Image.Image):
+if isinstance(image, Image.Image):
     # 画像プレビュー
-    showImage(320, screenshot.copy())
+    show_image(320, image.copy())
 
-    # フォルダ選択ダイアログ表示
-    directory = filedialog.askdirectory()
+    # フォルダ選択
+    directory = select_dir()
 
-    screenshot.save(naming(directory))
+    if len(directory) != 0:
+        image.save(naming(directory))
 else:
     # 画像でないことを通知
     messagebox.showinfo(title="error", message="NoImage")
