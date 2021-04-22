@@ -80,8 +80,12 @@ root = tkinter.Tk()
 root.withdraw()
 
 # コマンドライン引数処理
-if config_exists == True and len(sys.argv) > 1 and (sys.argv[1] == "-c"or sys.argv[1] == "--config"):
-    ScrUtl_config.set_ini_dir()
+if config_exists == True and len(sys.argv) > 1:
+    for arg in sys.argv:
+        if arg == "-c" or arg == "--config":
+            ScrUtl_config.set_ini_dir()
+        if arg == "-h" or arg == "--help":
+            ScrUtl_config.display_help()
     sys.exit()
 
 # スクショを取得
