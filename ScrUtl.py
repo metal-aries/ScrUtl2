@@ -41,13 +41,24 @@ def screenshot():
 
 # フォルダ選択
 def select_dir():
-    config_data = open(__file__+"/../ScrUtl.config.json", encoding="utf-8")
-    ini_dir = json.load(config_data)["ini_dir"]
+    # 設定ファイルの存在確認
+    config_path = __file__+"/../ScrUtl.config.json"
+    if path.isfile(config_path):
 
-    if path.isdir(ini_dir):
-        directory = filedialog.askdirectory(initialdir=ini_dir)
+        # 初期ディレクトリの読み込み
+        config_data = open(config_path, encoding="utf-8")
+        ini_dict = json.load(config_data)
+        
+        if "ini_dir" in ini_dict and path.isdir(ini_dict["ini_dir"]):
+            # 初期ディレクトリを指定してのフォルダ選択
+            directory = filedialog.askdirectory(initialdir=ini_dict["ini_dir"])
+        else:
+            directory = filedialog.askdirectory()
+
     else:
         directory = filedialog.askdirectory()
+
+    config_data.close()
     return directory
 
 # 保存先のパスを生成
@@ -64,14 +75,14 @@ def naming(filepath: str):
 
 ##### 本文 #####
 
+# 前処理、tkinterの背景を削除
+root = tkinter.Tk()
+root.withdraw()
+
 # コマンドライン引数処理
 if config_exists == True and len(sys.argv) > 1 and (sys.argv[1] == "-c"or sys.argv[1] == "--config"):
     ScrUtl_config.set_ini_dir()
     sys.exit()
-
-# 前処理、tkinterの背景を削除
-root = tkinter.Tk()
-root.withdraw()
 
 # スクショを取得
 image = screenshot()
